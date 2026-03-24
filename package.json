@@ -1,0 +1,58 @@
+{
+  "name": "@xjoker/gemini-cli-mcp",
+  "version": "1.0.0",
+  "description": "Secure MCP server wrapping Google Gemini CLI — cross-platform, activity-based timeout, minimal token overhead",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "gemini-cli-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "data/config/",
+    "LICENSE",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "npx tsx src/index.ts",
+    "test": "npx tsx tests/mcp-integration.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "gemini",
+    "gemini-cli",
+    "claude",
+    "model-context-protocol",
+    "ai",
+    "llm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xjoker/gemini-cli-mcp.git"
+  },
+  "homepage": "https://github.com/xjoker/gemini-cli-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/xjoker/gemini-cli-mcp/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "xjoker",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}

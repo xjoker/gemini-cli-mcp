@@ -1,0 +1,24 @@
+node_modules/
+dist/
+*.tgz
+
+# Local dev configs (contain machine-specific paths)
+.mcp.json
+.claude/
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test artifacts
+.AIINFO/

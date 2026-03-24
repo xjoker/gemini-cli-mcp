@@ -1,0 +1,8 @@
+src/
+tests/
+tsconfig.json
+.mcp.json
+.claude/
+.gitignore
+.AIINFO/
+.DS_Store
