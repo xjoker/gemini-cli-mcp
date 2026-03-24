@@ -71,6 +71,12 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
+## Upgrade
+
+```bash
+npm update -g @xjoker/gemini-cli-mcp
+```
+
 ## Tools
 
 ### `gemini_query`
@@ -121,7 +127,8 @@ Free tier quota: **60 RPM / 1 000 requests per day**.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Default model |
-| `GEMINI_TIMEOUT` | `120000` | Idle timeout in ms (resets on each output chunk) |
+| `GEMINI_STARTUP_TIMEOUT` | `15000` | Phase 1 idle timeout (ms) — CLI startup and initial response |
+| `GEMINI_TIMEOUT` | `120000` | Phase 2 idle timeout (ms) — thinking, resets on each output chunk |
 | `GEMINI_MAX_RESPONSE` | `100000` | Max response chars before truncation |
 | `GEMINI_BIN` | `gemini` | Path to Gemini CLI binary |
 | `GEMINI_SYSTEM_MD` | *(bundled minimal)* | Path to custom system prompt, or `"default"` for Gemini built-in |

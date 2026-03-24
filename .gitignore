@@ -22,3 +22,6 @@ Thumbs.db
 
 # Test artifacts
 .AIINFO/
+
+# Blog draft
+blog.md

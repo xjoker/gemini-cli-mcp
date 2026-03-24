@@ -1,6 +1,6 @@
 {
   "name": "@xjoker/gemini-cli-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Secure MCP server wrapping Google Gemini CLI — cross-platform, activity-based timeout, minimal token overhead",
   "type": "module",
   "main": "dist/index.js",

@@ -71,6 +71,12 @@ claude mcp add gemini-cli -s user -- node $(pwd)/dist/index.js
 }
 ```
 
+## 升级
+
+```bash
+npm update -g @xjoker/gemini-cli-mcp
+```
+
 ## 工具
 
 ### `gemini_query`
@@ -121,7 +127,8 @@ claude mcp add gemini-cli -s user -- node $(pwd)/dist/index.js
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `GEMINI_MODEL` | `gemini-2.5-flash` | 默认模型 |
-| `GEMINI_TIMEOUT` | `120000` | 空闲超时（ms），每次有输出时重置 |
+| `GEMINI_STARTUP_TIMEOUT` | `15000` | Phase 1 空闲超时（ms）— CLI 启动和初始响应 |
+| `GEMINI_TIMEOUT` | `120000` | Phase 2 空闲超时（ms）— 思考阶段，每次有输出时重置 |
 | `GEMINI_MAX_RESPONSE` | `100000` | 最大响应字符数，超出截断 |
 | `GEMINI_BIN` | `gemini` | Gemini CLI 可执行文件路径 |
 | `GEMINI_SYSTEM_MD` | *（内置精简版）* | 自定义系统提示路径，设为 `"default"` 使用 Gemini 内置提示 |

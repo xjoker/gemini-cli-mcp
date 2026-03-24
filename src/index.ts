@@ -72,7 +72,16 @@ const MINIMAL_SYSTEM_PROMPT_PATH = (() => {
   return null;
 })();
 
-const TIMEOUT_MS = (() => {
+// Two-phase idle timeout:
+// Phase 1 (startup): short timeout to detect CLI launch failures / 429 retries
+// Phase 2 (thinking): longer timeout after first stdout, for large file analysis + deep thinking
+const STARTUP_TIMEOUT_MS = (() => {
+  const val = Number(process.env.GEMINI_STARTUP_TIMEOUT ?? 15_000);
+  if (!Number.isFinite(val) || val <= 0) return 15_000;
+  return val;
+})();
+
+const THINKING_TIMEOUT_MS = (() => {
   const val = Number(process.env.GEMINI_TIMEOUT ?? 120_000);
   if (!Number.isFinite(val) || val <= 0) return 120_000;
   return val;
@@ -231,11 +240,15 @@ function extractErrorMessage(stderr: string, stdout: string): string {
 
   // Check for timeout first
   if (/Idle timeout/.test(combined)) {
+    const isStartup = /startup phase/.test(combined);
     const hasRateLimit = /429|Too Many Requests|RESOURCE_EXHAUSTED/i.test(combined);
-    return hasRateLimit
-      ? "Idle timeout (429 rate limited). Model may be unavailable or quota exhausted.\n" +
-        "Free tier: 60 RPM / 1000 req/day.\nAvailable models:\n" + formatModelList()
-      : "Idle timeout — no output from Gemini CLI. Model may be unavailable.\nAvailable models:\n" + formatModelList();
+    if (hasRateLimit) {
+      return "Idle timeout (429 rate limited). Model may be unavailable or quota exhausted.\n" +
+        "Free tier: 60 RPM / 1000 req/day.\nAvailable models:\n" + formatModelList();
+    }
+    return isStartup
+      ? "Startup timeout — Gemini CLI produced no output. Model may be unavailable or rate limited.\nAvailable models:\n" + formatModelList()
+      : "Thinking timeout — Gemini stopped responding during processing.\nTry a faster model or smaller input.";
   }
 
   // Check for rate limiting (429)
@@ -285,22 +298,23 @@ interface GeminiResult {
 }
 
 /**
- * Spawn gemini CLI with activity-based idle timeout.
+ * Spawn gemini CLI with two-phase idle timeout.
  *
- * Instead of a fixed wall-clock timeout, we track stdout/stderr activity.
- * Each time data arrives, the idle timer resets. Only when there is NO output
- * for `idleTimeoutMs` do we consider it stuck (e.g. gemini retrying 429).
+ * Phase 1 (startup): Short timeout (default 15s). Detects CLI launch failures
+ * and 429 retry loops quickly. Transitions to phase 2 on first stdout data.
  *
- * This ensures long-running but active requests (deep thinking with many
- * output tokens) are never killed prematurely, while truly stuck processes
- * are terminated promptly.
+ * Phase 2 (thinking): Long timeout (default 120s). After the CLI has started
+ * and is processing, allow generous time for large file analysis and deep
+ * thinking. Resets on each stdout chunk, so active output never times out.
  */
 function runGeminiRaw(opts: GeminiRunOptions): Promise<GeminiResult> {
   return new Promise((resolve, reject) => {
     const escapedArgs = opts.args.map(escapeArg);
-    const idleTimeoutMs = opts.timeoutMs ?? TIMEOUT_MS;
+    const startupMs = opts.timeoutMs ?? STARTUP_TIMEOUT_MS;
+    const thinkingMs = THINKING_TIMEOUT_MS;
     let timedOut = false;
     let closed = false;
+    let phase: "startup" | "thinking" = "startup";
 
     const child: ChildProcess = spawn(GEMINI_BIN, escapedArgs, {
       shell: IS_WIN,
@@ -310,18 +324,14 @@ function runGeminiRaw(opts: GeminiRunOptions): Promise<GeminiResult> {
       windowsHide: true,
     });
 
-    // stdin closed via "ignore" in stdio config — no input needed.
-
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
 
-    // --- Idle timeout: resets on any stdout activity ---
-    function forceKill(): void {
+    // --- Force kill with SIGKILL escalation ---
+    function forceKill(timeoutMs: number): void {
       if (closed) return;
       timedOut = true;
       child.kill("SIGTERM");
-      // SIGKILL escalation: gemini spawns child MCP servers that inherit
-      // pipe fds, preventing `close` from firing. Force-resolve after 3s.
       setTimeout(() => {
         if (closed) return;
         child.kill("SIGKILL");
@@ -330,28 +340,33 @@ function runGeminiRaw(opts: GeminiRunOptions): Promise<GeminiResult> {
         closed = true;
         resolve({
           stdout: Buffer.concat(stdoutChunks).toString("utf-8"),
-          stderr: `Idle timeout (no output for ${idleTimeoutMs}ms). ${Buffer.concat(stderrChunks).toString("utf-8")}`.trim(),
+          stderr: `Idle timeout (${phase} phase, ${timeoutMs}ms). ${Buffer.concat(stderrChunks).toString("utf-8")}`.trim(),
           code: 124,
         });
       }, 3_000);
     }
 
-    let idleTimer = setTimeout(forceKill, idleTimeoutMs);
+    // Start in phase 1 (startup) with short timeout
+    let idleTimer = setTimeout(() => forceKill(startupMs), startupMs);
 
     function resetIdleTimer(): void {
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(forceKill, idleTimeoutMs);
+      if (phase === "startup") {
+        // First stdout data: transition to phase 2 (thinking)
+        phase = "thinking";
+      }
+      idleTimer = setTimeout(() => forceKill(thinkingMs), thinkingMs);
     }
 
     child.stdout!.on("data", (chunk: Buffer) => {
       stdoutChunks.push(chunk);
-      resetIdleTimer(); // AI is actively outputting — reset idle clock
+      resetIdleTimer();
     });
 
     child.stderr!.on("data", (chunk: Buffer) => {
       stderrChunks.push(chunk);
-      // Don't reset on stderr — error output during 429 retries shouldn't
-      // prevent timeout. Only stdout activity (actual AI output) resets.
+      // Don't reset on stderr — 429 retries produce stderr continuously
+      // but no stdout. If we reset here, stuck processes never time out.
     });
 
     child.on("error", (err) => {
@@ -374,7 +389,7 @@ function runGeminiRaw(opts: GeminiRunOptions): Promise<GeminiResult> {
       if (timedOut) {
         resolve({
           stdout,
-          stderr: `Idle timeout (no output for ${idleTimeoutMs}ms). ${stderr}`.trim(),
+          stderr: `Idle timeout (${phase} phase). ${stderr}`.trim(),
           code: 124,
         });
         return;
