@@ -38,7 +38,7 @@ gemini -p "say hello" -o text
 npm install -g @xjoker/gemini-cli-mcp
 
 # Register with Claude Code
-claude mcp add gemini-cli -- gemini-cli-mcp
+claude mcp add gemini-cli -s user -- gemini-cli-mcp
 ```
 
 ### From source
@@ -48,7 +48,7 @@ git clone https://github.com/xjoker/gemini-cli-mcp.git
 cd gemini-cli-mcp
 npm install && npm run build
 
-claude mcp add gemini-cli -- node $(pwd)/dist/index.js
+claude mcp add gemini-cli -s user -- node $(pwd)/dist/index.js
 ```
 
 ### Claude Desktop
