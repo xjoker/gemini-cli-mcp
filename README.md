@@ -1,5 +1,11 @@
 # gemini-cli-mcp
 
+[![npm version](https://img.shields.io/npm/v/@xjoker/gemini-cli-mcp.svg)](https://www.npmjs.com/package/@xjoker/gemini-cli-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@xjoker/gemini-cli-mcp.svg)](https://www.npmjs.com/package/@xjoker/gemini-cli-mcp)
+[![license](https://img.shields.io/github/license/xjoker/gemini-cli-mcp.svg)](https://github.com/xjoker/gemini-cli-mcp/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/@xjoker/gemini-cli-mcp.svg)](https://nodejs.org/)
+[![GitHub stars](https://img.shields.io/github/stars/xjoker/gemini-cli-mcp.svg?style=social)](https://github.com/xjoker/gemini-cli-mcp)
+
 [中文文档](./README.zh-CN.md)
 
 A secure [MCP](https://modelcontextprotocol.io/) server that wraps Google's [Gemini CLI](https://github.com/google-gemini/gemini-cli). It lets Claude Code (or any MCP client) call Gemini models using your local OAuth session — no API key required.

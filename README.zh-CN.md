@@ -1,5 +1,11 @@
 # gemini-cli-mcp
 
+[![npm version](https://img.shields.io/npm/v/@xjoker/gemini-cli-mcp.svg)](https://www.npmjs.com/package/@xjoker/gemini-cli-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@xjoker/gemini-cli-mcp.svg)](https://www.npmjs.com/package/@xjoker/gemini-cli-mcp)
+[![license](https://img.shields.io/github/license/xjoker/gemini-cli-mcp.svg)](https://github.com/xjoker/gemini-cli-mcp/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/@xjoker/gemini-cli-mcp.svg)](https://nodejs.org/)
+[![GitHub stars](https://img.shields.io/github/stars/xjoker/gemini-cli-mcp.svg?style=social)](https://github.com/xjoker/gemini-cli-mcp)
+
 [English](./README.md)
 
 安全的 [MCP](https://modelcontextprotocol.io/) 服务器，封装 Google [Gemini CLI](https://github.com/google-gemini/gemini-cli)。让 Claude Code（或任何 MCP 客户端）通过本地 OAuth 登录调用 Gemini 模型，无需 API Key。
